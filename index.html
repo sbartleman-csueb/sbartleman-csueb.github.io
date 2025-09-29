@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Produce Freshness Estimation: Ready to Pick, Ready to Eat, or Spoiled</title>
+    <meta name="description" content="A hands-on tutorial on how computer vision estimates produce freshness: sensors, algorithms, challenges, and a mini-demo + quiz." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/styles.css" />
+    <script defer src="assets/script.js"></script>
+    <!-- Optional ML in browser (for the TF.js demo fallback) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+</head>
+
+<body>
+<header class="site-header">
+    <div class="brand">
+        <span class="emoji">🍌</span>
+        <h1>Produce Freshness Estimation</h1>
+    </div>
+    <nav class="top-nav" aria-label="Primary">
+        <a href="#intro">Introduction</a>
+        <a href="#sensors">Sensors</a>
+        <a href="#algorithms">Algorithms</a>
+        <a href="#success">Successful vs Less Successful</a>
+        <a href="#challenges">Challenges</a>
+        <a href="#future">Future & Conclusion</a>
+        <a href="#demo">Mini Demo</a>
+        <a href="#quiz">Quiz</a>
+    </nav>
+</header>
+
+<main>
+    <!-- Hero / Intro Page -->
+    <section id="hero" class="hero">
+        <div class="hero-copy">
+            <h2>Ready to Pick, Ready to Eat, or Spoiled?</h2>
+            <p>Explore how <strong>computer vision</strong> helps growers, grocers, and consumers estimate freshness and ripeness using cameras and algorithms. This interactive tutorial covers sensors, models, pitfalls, and what’s next.</p>
+        </div>
+    </section>
+
+    <!-- Introduction -->
+    <section id="intro" class="content-section">
+        <h3>Introduction & Problem Definition</h3>
+        <p>Determining <strong>“freshness”</strong> blends the evaluation and classification visible cues (color, texture, bruising), internal chemistry (sugars, acids, volatiles), and physical exposure (time and temperature). Evaluation of these attributes typically involves using sensors, either visual, chemical, or physical, to measure these characteristics. Some techniques involve sampling the flesh or juice, measuring pH using electrodes, or checking physical labels attached to the fruits which measure exposure to humidity and temperature. However, most research is focused on non-destructive techniques which analyze light emitted by the produce, which can determine freshness without destroying, altering, or even touching the fruit at all. Many of the biggest challenges in this space involve overcoming various outdoor and external conditions, such as snow, rain, dust, or other visual occlusions. Computer vision is often used in conjunction with deep learning techniques such as neural networks to be able to detect and measure freshness-relevant attributes such as color, texture, shape, and size to make a final determination on whether a produce item is ready to be picked, ready to eat, or is not suitable for consumption. These visual cues are then translated into supervised targets like <em>unripe</em>, <em>ripe</em>, and <em>overripe/spoiled</em> using labeled images and videos. Computer vision techniques are most commonly used in industry because they're fast, scalable, non-destructive, and cost-effective.</p>
+        <!-- Bananas: Ripeness Examples with Demo Legends -->
+        <style>
+          .banana-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            align-items: start;
+            margin: 1rem 0 2rem;
+          }
+          .banana-grid figure {
+            margin: 0;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+          }
+          .banana-grid img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+          }
+          .banana-grid figcaption {
+            padding: 10px 12px 12px;
+            font-size: 14px;
+            line-height: 1.35;
+          }
+          .banana-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+          }
+          .banana-legend {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 12px;
+            background: #f3f4f6;
+            border-radius: 6px;
+            padding: 6px 8px;
+            margin: 6px 0 8px;
+            display: inline-block;
+          }
+          .banana-attr {
+            font-size: 12px;
+            color: #6b7280;
+          }
+          .banana-attr a { color: #6b7280; text-decoration: underline; }
+        </style>
+
+        <div class="banana-grid">
+            <!-- Unripe (green) -->
+            <figure>
+                <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/6/66/Banana_tree_with_green_bananas.jpg"
+                        alt="Green bananas on a banana plant" loading="lazy">
+                <figcaption>
+                    <div class="banana-title">Unripe (Green on Plant)</div>
+                    <div class="banana-legend">Predicted: <strong>Unripe</strong> — confidence 0.96</div>
+                    <div class="banana-attr">
+                        Source: <a href="https://commons.wikimedia.org/wiki/File:Banana_tree_with_green_bananas.jpg">Wikimedia Commons</a> · Public Domain (author: Rosendahl)
+                    </div>
+                </figcaption>
+            </figure>
+
+            <!-- Ready to Eat (single Cavendish) -->
+            <figure>
+                <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Banana-Single.jpg"
+                        alt="Single ripe Cavendish banana on white background" loading="lazy">
+                <figcaption>
+                    <div class="banana-title">Ready to Eat (Fully Yellow)</div>
+                    <div class="banana-legend">Predicted: <strong>Ripe</strong> — confidence 0.92</div>
+                    <div class="banana-attr">
+                        Source: <a href="https://commons.wikimedia.org/wiki/File:Banana-Single.jpg">Wikimedia Commons</a> · © Evan-Amos · License: CC BY-SA 3.0
+                    </div>
+                </figcaption>
+            </figure>
+
+            <!-- Ready to Eat (spotty / sweeter) -->
+            <figure>
+                <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/8/8e/Banana_Fruit.JPG"
+                        alt="Ripe bananas with brown speckles on white background" loading="lazy">
+                <figcaption>
+                    <div class="banana-title">Ready to Eat (Spotty / Sweeter)</div>
+                    <div class="banana-legend">Predicted: <strong>Ripe</strong> — confidence 0.88</div>
+                    <div class="banana-attr">
+                        Source: <a href="https://commons.wikimedia.org/wiki/File:Banana_Fruit.JPG">Wikimedia Commons</a> · Public Domain (author: ZooFari)
+                    </div>
+                </figcaption>
+            </figure>
+
+            <!-- Overripe / Spoiled -->
+            <figure>
+                <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/5/51/Extremely_overripe_banana.jpg"
+                        alt="Extremely overripe banana with dark peel" loading="lazy">
+                <figcaption>
+                    <div class="banana-title">Overripe / Spoiled</div>
+                    <div class="banana-legend">Predicted: <strong>Overripe/Spoiled</strong> — confidence 0.97</div>
+                    <div class="banana-attr">
+                        Source: <a href="https://commons.wikimedia.org/wiki/File:Extremely_overripe_banana.jpg">Wikimedia Commons</a> · © Park taeho · License: CC BY-SA 4.0
+                    </div>
+                </figcaption>
+            </figure>
+        </div>
+<!--        <div class="grid-2">-->
+<!--            <figure>-->
+<!--                <img loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Spectral_sampling_RGB_multispectral_hyperspectral_imaging.svg" alt="RGB vs multispectral vs hyperspectral sampling diagram." />-->
+<!--                <figcaption>RGB vs multispectral vs hyperspectral. Source: <a href="https://commons.wikimedia.org/wiki/File:Spectral_sampling_RGB_multispectral_hyperspectral_imaging.svg" target="_blank" rel="noopener">Wikimedia Commons (Lucasbosch, CC BY-SA)</a></figcaption>-->
+<!--            </figure>-->
+<!--            <figure>-->
+<!--                <img loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/1/1a/Hyperspectral_Imaging_Techniques.jpg" alt="Hyperspectral imaging techniques illustration." />-->
+<!--                <figcaption>Hyperspectral imaging techniques. Source: <a href="https://en.wikipedia.org/wiki/File:Hyperspectral_Imaging_Techniques.jpg" target="_blank" rel="noopener">Wikimedia Commons</a></figcaption>-->
+<!--            </figure>-->
+<!--        </div>-->
+    </section>
+
+    <!-- Sensors -->
+    <section id="sensors" class="content-section">
+        <h3>Overview of Commonly Used Sensor Techniques</h3>
+        <p>There are a number of existing techniques used in industry for detecting spoilage.
+
+        <h4>Images and Video</h4>
+        <p>Most field and retail setups use standard RGB cameras on small, battery-powered devices (e.g. phones, Go Pros, etc). Hardware is affordable, easy to deploy, and reliable. However, this technique typically requires more strongly ideal conditions than others. For example, some setups rely on sunlight to reflect off of the produce.</p>
+        <ul class="bullets">
+            <li><strong>Components:</strong> camera, lighting, neutral background, compute (device or cloud).</li>
+            <li><strong>Use conditions:</strong> diffuse light, fixed distance, minimal motion blur; white-balance and exposure locked (to have more consistent coloring.)</li>
+            <li><strong>Example output format(s):</strong> JPEG/PNG visual and MP4 model output with label confidence and bounding boxes.</li>
+            <li><strong>Limitations:</strong> Only examines external conditions. Sensitive to lighting, specular glare, and other lighting conditions.</li>
+        </ul>
+        <p></p>
+        <p></p>
+        <style>
+          .two-up { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap:16px; }
+          figure { margin:0; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; background:#fff; }
+          img { width:100%; height:220px; object-fit:cover; display:block; }
+          figcaption { padding:10px 12px 12px; font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif; }
+          .title { font-weight:600; margin-bottom:4px; }
+          .legend { font:12px/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background:#f3f4f6; border-radius:6px; padding:6px 8px; display:inline-block; margin:6px 0 8px; }
+          .attr { font-size:12px; color:#6b7280; }
+          .attr a { color:#6b7280; text-decoration:underline; }
+        </style>
+
+        <div class="two-up">
+            <!-- Image 1: Still image (RGB) showing multiple ripeness states -->
+            <figure>
+                <img
+                        src="https://commons.wikimedia.org/wiki/Special:FilePath/Approximately%2030%20Gros%20Michel%20Bananas.jpg"
+                        alt="Bananas on a countertop in multiple ripeness stages from green to yellow to spotted">
+                <figcaption>
+                    <div class="title">RGB Still Image (Mobile): Multiple Ripeness States</div>
+                    <div class="legend">Demo (per-fruit): Unripe 0.11 · Turning 0.17 · Ripe 0.62 · Overripe 0.10</div>
+                    <div class="attr">
+                        Source: “Approximately 30 Gros Michel Bananas” via Wikimedia Commons (CC BY 4.0) — photo by Zwifree.
+                    </div>
+                </figcaption>
+            </figure>
+
+            <!-- Image 2: Representative video frame -->
+            <figure>
+                <img
+                        src="https://commons.wikimedia.org/wiki/Special:FilePath/Extremely%20overripe%20banana.jpg"
+                        alt="Close-up of an extremely overripe banana with dark peel">
+                <figcaption>
+                    <div class="title">Video (Smartphone): Representative Frame</div>
+                    <div class="legend">Demo (frame-level): Predicted = <strong>Overripe</strong> — confidence 0.97</div>
+                    <div class="attr">
+                        Source: “Extremely overripe banana” via Wikimedia Commons (CC BY-SA 4.0) — photo by Park taeho.
+                    </div>
+                </figcaption>
+            </figure>
+        </div>
+
+        <h4>Multispectral and Hyperspectral</h4>
+        <p>Hyperspectral imaging uses both spectroscopy (in other words, the visible spectrum) and basic imaging techniques to determine ripeness by constructing a chemical map of the fruit. Hyperspectral imaging can capture up to hundreds of narrow bands and correlate this information to the internal chemistry of the produce using AI models. This is often used for quality control and is becoming increasingly real-time when using snapshot sensors.</p>
+
+        <ul class="bullets">
+            <li><strong>Components:</strong> HSI camera (push-broom or snapshot), lens, uniform lighting, calibration targets (white/dark), conveyance for line-scan systems.</li>
+            <li><strong>Use conditions:</strong> stable illumination, controlled motion for push-broom, periodic white/dark reference captures.</li>
+            <li><strong>Output:</strong> Classification outputs.</li>
+            <li><strong>Limitations:</strong> Cost and complexity are significantly higher than basic RGB setups, calibration requirements are more severe. Many of the same issues with less than ideal conditions as RGB has.</li>
+        </ul>
+        <p></p><p></p>
+        <style>
+          .hs-two { display:grid; grid-template-columns: repeat(auto-fit, minmax(300px,1fr)); gap:16px; }
+          .hs-two figure { margin:0; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; background:#fff; }
+          .hs-two img { width:30%; height:auto; display:block; }
+          .hs-two figcaption { padding:10px 12px 12px; font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif; }
+          .hs-title { font-weight:600; margin-bottom:4px; }
+          .hs-attr { font-size:12px; color:#6b7280; margin-top:6px; }
+          .hs-attr a { color:#6b7280; text-decoration:underline; }
+        </style>
+
+        <div class="hs-two">
+            <!-- Image A: Fruit ripeness “chemical map” from hyperspectral data -->
+            <figure>
+                <img
+                        src="https://www.mdpi.com/agriculture/agriculture-12-02145/article_deploy/html/images/agriculture-12-02145-g007.png"
+                        alt="Achacha fruit shown in RGB alongside false-color hyperspectral ripeness maps estimated by machine learning">
+                <figcaption>
+                    <div class="hs-title">Hyperspectral ripeness maps (pixel-wise)</div>
+                    <div>
+                        Example of **RGB vs. false-color ripeness maps** derived from hyperspectral imaging; colors reflect estimated ripeness level per pixel using regression models (PLSR/SVR).
+                    </div>
+                    <div class="hs-attr">
+                        Source: Nguyen &amp; Liou, <em>Agriculture</em> (MDPI), 2022. Licensed CC BY 4.0.
+                        <a href="https://www.mdpi.com/2077-0472/12/12/2145">Article page</a>.
+                    </div>
+                </figcaption>
+            </figure>
+        </div>
+
+        <h4>Near-infrared Spectroscopy</h4>
+        <p>Near-infrared spectroscopy measures the absorption of infrared light by various chemical bonds which are released by the ripening process, and uses this information to determine approximately how far the produce is into the ripening process.
+        <ul class="bullets" role="list">
+            <li>
+                <strong>Components:</strong>
+                A handheld or inline near-infrared unit with a stable IR light source, a spectrometer/detector and probe optics, plus a controller that applies calibration (white/dark references) and an ML model to the measured spectrum.
+            </li>
+            <li>
+                <strong>Use conditions:</strong>
+                Works best with clean, matte surfaces at a fixed distance with minimal ambient light and temperature-stable hardware
+            </li>
+            <li>
+                <strong>Output:</strong>
+                A non-destructive estimate of ripeness such as a maturity score or predicted values often accompanied by a confidence or quality flag.
+            </li>
+            <li>
+                <strong>Limitations:</strong>
+                Shallow penetration depth and sensitivity to glare, water, wax, dirt, and season shifts require that careful calibration and ground-truthing are done. Also, hardware cost is higher than simple RGB cameras.
+            </li>
+        </ul>
+        <p></p>
+        <!-- Near-infrared Spectroscopy (NIR) — Example Image -->
+        <figure style="margin:0; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; background:#fff; max-width:760px;">
+            <img
+                    src="https://pub.mdpi-res.com/applsci/applsci-11-03209/article_deploy/html/images/applsci-11-03209-g001.png"
+                    alt="Handheld near-infrared spectrometer measuring an intact tomato while a laptop displays its spectrum"
+                    style="width:100%; height:auto; display:block;">
+            <figcaption style="padding:10px 12px 12px; font:14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                <strong>Near-infrared Spectroscopy (NIR), non-destructive:</strong>
+                A handheld spectrometer illuminates the peel with NIR light; wavelength-specific absorption from O–H/C–H/N–H bonds is modeled to estimate ripeness-related chemistry (e.g., °Brix/SSC) without cutting the fruit.
+                <div style="font-size:12px; color:#6b7280; margin-top:6px;">
+                    Image: Borba et&nbsp;al., <em>Applied Sciences</em> (MDPI), 2021 — CC BY&nbsp;4.0.
+                    <a href="https://www.mdpi.com/2076-3417/11/7/3209">Article</a> ·
+                    <a href="https://pub.mdpi-res.com/applsci/applsci-11-03209/article_deploy/html/images/applsci-11-03209-g001.png">Figure&nbsp;1</a>
+                </div>
+            </figcaption>
+        </figure>
+
+        <h4>Fluorescence Spectroscopy</h4>
+        <p>Fluorescence spectroscopy is a technique which uses fluorescent light emitted by fluorophores, which can be used to measure microbial growth and oxidation within the produce. </p>
+        <ul class="bullets" role="list">
+            <li>
+                <strong>Components:</strong>
+                A UV/blue excitation source such as an LED or laser, collection optics and a spectrometer or fluorescence camera, plus control software for calibration and analysis.
+            </li>
+            <li>
+                <strong>Use conditions:</strong>
+                Best used in a dark, light-controlled setup with fixed geometry and integration time, clean/matte surfaces, and stable temperature.
+            </li>
+            <li>
+                <strong>Output:</strong>
+                An emission spectrum or false-color fluorescence image/ratio map that is converted to a spoilage or oxidation index and an optional confidence/quality flag.
+            </li>
+            <li>
+                <strong>Limitations:</strong>
+                Signals are surface-biased and can be weak or quenched, bands often overlap and require careful calibration, wet/waxy skins and ambient light degrade accuracy, photobleaching can occur, and hardware is more complex/costly than RGB.
+            </li>
+        </ul>
+
+
+<!--        <div class="note">-->
+<!--            <strong>Further reading/videos:</strong>-->
+<!--            <ul>-->
+<!--                <li>HSI concept: <a href="https://en.wikipedia.org/wiki/Hyperspectral_imaging" target="_blank" rel="noopener">Wikipedia overview</a>.</li>-->
+<!--                <li>Fruit maturity via HSI (review & demos): <a href="https://www.mdpi.com/2076-3417/13/17/9740" target="_blank" rel="noopener">MDPI Appl. Sci. 2023</a>; <a href="https://www.sciencedirect.com/science/article/pii/S2589721720300131" target="_blank" rel="noopener">Real-time HSI for strawberries</a>.</li>-->
+<!--                <li>Cubert palm-oil ripeness demo (video article): <a href="https://cubert-hyperspectral.com/en/palm-oil-fruit-ripeness/" target="_blank" rel="noopener">link</a>.</li>-->
+<!--            </ul>-->
+<!--        </div>-->
+    </section>
+
+    <!-- Algorithms -->
+    <section id="algorithms" class="content-section">
+        <h3>Algorithms Involved in Detecting Freshness</h3>
+        <p><strong>Color/texture Classification and Basic ML</strong>: This algorithm involves converting images to color spaces that are perceived by human perception, computing simple stats from these spaces like means and histograms, and adding texture descriptors. A lightweight classifier then maps features to ripeness tiers. This is especially effective under ideal conditions, such as fixed and consistent lighting, neutral backgrounds and with produce that has consistent and predictable color progression.</p>
+        <p><strong>Pros:</strong>
+        <ul class="bullets">
+            <li>Models are simple and can easily run on small devices.</li>
+            <li>Easy to interpret and calibrate, with minimal training data required.</li>
+        </ul>
+        <p><strong>Cons:</strong>
+        <ul class="bullets">
+            <li>Requires ideal conditions, such as good illumination and consistent color balance.</li>
+            <li>Not good at detecting subtle defects or internals of the fruit.</li>
+        </ul>
+
+        <p><strong>Deep Convolutional Neural Network RGB Classifiers</strong>: A neural network is trained on labeled images of produce at known ripeness levels. This technique can leverage transfer learning and imaging enhancements which allows models to better handle environmental variables, such as perspective or background changes than hand-crafted features.</p>
+        <p><strong>Pros:</strong>
+        <ul class="bullets">
+            <li>Better handling of conplex scenes and situations.</li>
+            <li>Can learn cues beyond color, such as texture or deeper color attributes such as speckling.</li>
+        </ul>
+        <p><strong>Cons:</strong>
+        <ul class="bullets">
+            <li>Requires strong training data and validation.</li>
+            <li>Similar to the previous technique, does not go beyond surface-level detail.</li>
+        </ul>
+
+        <p><strong>Object detection and segmentation for defects with YOLO and Mask R-CNN</strong>: YOLO (You Only Look Once) works to identify bad spots, while Mask R-CNN (Mask Region-based Convolutional Neural Networks) works to color in damaged pixels when the image is processed. YOLO is good when trying to run detection quickly - eg reject if any produce has a bruise larger than X. This is often used during fruit processing when speed matters. Mask R-CNN is good when precision is required, for example if you want to reject if greater than N% of the surface of a piece of produce has mold or is discolored. Also good for reporting general quaility.</p>
+        <p><strong>Pros of YOLO:</strong>
+        <ul class="bullets">
+            <li>It's fast, simple to run directly on devices, and is robust after training.</li>
+            <li>Handles variable backgrounds well.</li>
+        </ul>
+        <p><strong>Cons of YOLO:</strong>
+        <ul class="bullets">
+            <li>Not good for gathering precise data, like "what percentage of this fruit is moldy".</li>
+            <li>Not as good as other models when it comes to picking up tiny defects.</li>
+        </ul>
+        <p><strong>Pros of Mask R-CNN:</strong>
+        <ul class="bullets">
+            <li>It's pixel-accurate and precise.</li>
+            <li>Easy to configure - example, "reject if more than 15% mold".</li>
+        </ul>
+        <p><strong>Cons of Mask R-CNN:</strong>
+        <ul class="bullets">
+            <li>Slower and more heavy than other algorithms such as YOLO.</li>
+            <li>Each defect region must be traced, which requires more difficult labeling.</li>
+        </ul>
+
+<!--        <div class="grid-2">-->
+<!--            <figure>-->
+<!--                <img loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/0/0c/Approximately_30_Gros_Michel_Bananas.jpg" alt="Banana examples for color/texture algorithms." />-->
+<!--                <figcaption>Visible cues (color/texture) often suffice for bananas. Source: <a href="https://commons.wikimedia.org/wiki/File:Approximately_30_Gros_Michel_Bananas.jpg" target="_blank" rel="noopener">Wikimedia Commons</a></figcaption>-->
+<!--            </figure>-->
+<!--            <figure>-->
+<!--                <img loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Spectral_sampling_RGB_multispectral_hyperspectral_imaging.svg" alt="Spectral sampling diagram." />-->
+<!--                <figcaption>Spectral bands capture chemistry tied to ripeness. Source: <a href="https://commons.wikimedia.org/wiki/File:Spectral_sampling_RGB_multispectral_hyperspectral_imaging.svg" target="_blank" rel="noopener">Wikimedia Commons</a></figcaption>-->
+<!--            </figure>-->
+<!--        </div>-->
+
+        <p></p>
+        <details>
+            <summary><strong>Conclusion: When to pick which algorithm?</strong></summary>
+            <ul class="bullets">
+                <li>Need where and how much? → YOLO / Mask R-CNN.</li>
+                <li>Need a robust “this item = X grade” in the wild? → Deep RGB CNN</li>
+                <li>Need fast, tiny, explainable in controlled light? → Color/Texture + Basic ML</li>
+            </ul>
+        </details>
+
+        <!-- Demo -->
+        <section id="demo" class="content-section demo">
+            <h3>Mini Demo: Simple RGB Heuristics + Tiny Classifier</h3>
+            <p>Upload a banana photo (single fruit, front-lit). We estimate ripeness with a very simple approach: mean hue/brightness thresholds and a TF.js linear model you can train live with your own examples.</p>
+
+            <div class="demo-ui">
+                <input type="file" id="imgInput" accept="image/*" />
+                <canvas id="preview" width="320" height="240" aria-label="Preview canvas"></canvas>
+                <div class="result">
+                    <div><strong>Heuristic Label:</strong> <span id="heurLabel">—</span></div>
+                    <div><strong>Mean Hue:</strong> <span id="meanHue">—</span> | <strong>Brightness:</strong> <span id="meanVal">—</span></div>
+                </div>
+                <details class="trainbox">
+                    <summary>Optional: train tiny TF.js classifier (live)</summary>
+                    <p>Click to add a few examples, then train. The model sees <em>color histogram</em> features.</p>
+                    <div class="buttons">
+                        <button data-class="unripe" class="chip">Add UNRIPE</button>
+                        <button data-class="ripe" class="chip">Add RIPE</button>
+                        <button data-class="overripe" class="chip">Add OVERRIPE</button>
+                        <button id="trainBtn" class="btn btn-primary">Train</button>
+                    </div>
+                    <div id="trainStatus" class="status">No samples yet.</div>
+                    <div><strong>Model Prediction:</strong> <span id="modelPred">—</span></div>
+                </details>
+            </div>
+
+            <pre class="code"><code>// Heuristic core (HSV thresholds):
+// 1) Convert pixels to HSV, average hue (H) and value (V)
+// 2) Simple rules (tune per setup):
+//    if H in [25°,75°] & V>0.4 → likely RIPE (yellow)
+//    if H < 25° & V>0.35 → OVERRIPE (brown)
+//    if H > 75° & V>0.35 → UNRIPE (green)
+//    else → uncertain (needs better lighting)
+// Production tip: lock white balance & exposure, or include a gray card.</code></pre>
+        </section>
+<!--        <div class="note">-->
+<!--            <strong>Example (quick, explainable RGB pipeline):</strong> see the interactive mini-demo below that thresholds hue/brightness and a tiny TF.js model to label “Unripe / Ripe / Overripe”.-->
+<!--        </div>-->
+    </section>
+
+    <!-- Successful vs Less Successful -->
+    <section id="success" class="content-section">
+        <h3>Successful vs Less Successful Techniques</h3>
+        <p>This is a deeper dive into one of the more common techniques: <strong>Classification Based on Color and Texture Using Basic ML</strong>.</p>
+        <h3>Color/Texture Classification + Basic ML</h3>
+
+        <h4>Where it succeeds</h4>
+        <ul class="bullets" role="list">
+            <li><strong>Produce with clear, monotonic color changes.</strong> Bananas and tomatoes are ideal examples.</li>
+            <li><strong>Controlled light in clear, ideal situations.</strong> Use diffused, high-CRI LEDs and lock exposure and white balance.</li>
+            <li><strong>Benchtop or light-tent with neutral background.</strong> Stable distance and a matte backdrop make texture cues consistent.</li>
+            <li><strong>Low-data or quick prototyping.</strong> Tens to a few hundred labeled images per class works best.</li>
+        </ul>
+
+        <h4>Where it fails</h4>
+        <ul class="bullets" role="list">
+            <li><strong>Lighting drift and auto camera settings.</strong> Auto exposure or white balance shift pixel values and break thresholds and classifiers.</li>
+            <li><strong>Specular glare, wax, and shadows.</strong> Pixels which misrepresent the fruit confuse color histograms and texture detection.</li>
+            <li><strong>Green-to-green crops or internal changes.</strong> Crops which don't have much (or any) color change. RGB surface features can’t capture attributes such as firmness, early bruising.</li>
+            <li><strong>Compression and poor quality capture of live imaging.</strong> JPEG artifacts and 8-bit limits smear texture and shift colors.</li>
+        </ul>
+
+        <!-- Color/Texture + Basic ML — Success vs Failure -->
+        <style>
+  .ct-two { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap:16px; }
+  .ct-two figure { margin:0; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; background:#fff; }
+  .ct-two img { width:100%; height:auto; display:block; }
+  .ct-two figcaption { padding:10px 12px 12px; font:14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif; }
+  .pill { display:inline-block; font-size:12px; padding:4px 8px; border-radius:999px; background:#eef2ff; color:#3730a3; margin-bottom:6px; }
+  .attr { font-size:12px; color:#6b7280; margin-top:8px; }
+  .attr a { color:#6b7280; text-decoration:underline; }
+</style>
+
+        <div class="ct-two">
+            <!-- SUCCESS: clear, monotonic color + neutral background -->
+            <figure>
+                <img
+                        src="https://commons.wikimedia.org/wiki/Special:FilePath/Banana-Single.jpg"
+                        alt="Single ripe Cavendish banana on white background under controlled lighting"
+                        loading="lazy">
+                <figcaption>
+                    <span class="pill">Success (ideal conditions)</span>
+                    <div><strong>Why this works:</strong> Clear, monotonic color change on a neutral background with fixed lighting makes simple color-space stats (e.g., HSV or Lab means/histograms) and light texture cues highly separable for a small classifier.</div>
+                    <div class="attr">Image: “Banana-Single” — © Evan-Amos — License: CC BY-SA 3.0 — <a href="https://commons.wikimedia.org/wiki/File:Banana-Single.jpg">Wikimedia file page</a></div>
+                </figcaption>
+            </figure>
+
+            <!-- FAILURE: green-to-green/internal changes not visible in RGB -->
+            <figure>
+                <img
+                        src="https://commons.wikimedia.org/wiki/Special:FilePath/Avocado%20Hass%20-%20single%20and%20halved.jpg"
+                        alt="Whole and halved Hass avocado on gray: exterior reveals little about internal state"
+                        loading="lazy">
+                <figcaption>
+                    <span class="pill">Failure (RGB surface limits)</span>
+                    <div><strong>Why this fails:</strong> Green-to-green or low-contrast surfaces (e.g., Hass avocado) and internal changes (firmness, early bruising) are poorly expressed in RGB color/texture, so basic ML on surface pixels often misclassifies ripeness.</div>
+                    <div class="attr">Image: “Avocado Hass — single and halved” — © Ivar Leidus — License: CC BY-SA 4.0 — <a href="https://commons.wikimedia.org/wiki/File:Avocado_Hass_-_single_and_halved.jpg">Wikimedia file page</a></div>
+                </figcaption>
+            </figure>
+        </div>
+    </section>
+
+    <!-- Challenges -->
+    <section id="challenges" class="content-section">
+        <h3>Challenges</h3>
+        <p>There are a number of major challenges in this space. These include:</p>
+        <ul class="bullets">
+            <li><strong>Human motion vs app latency:</strong> shaky phones and moving fruit results in motion blur. This can be solved with shorter exposure, stabilization, or burst frames.</li>
+            <li><strong>Lighting drift and color consistency:</strong> Automated exposure hardware and software results in inconsistent color features. Locking camera settings can help.</li>
+            <li><strong>Sensor alignment and calibration:</strong> For multispectral techniques, it's important to register bands and calibrate sensors regularly.</li>
+            <li><strong>Domain shift:</strong> Different seasons, fruit variations, etc all require re-training.</li>
+            <li><strong>Labels and ground truth:</strong> Models are only as good as the labels they learn from. If the ground truth is noisy or loosely defined (e.g., “looks ripe”), the model will learn that fuzziness.</li>
+            <li><strong>Classification latency:</strong> Conveyor belts often need lightning-fast decisions but smaller models which would fit on mobile devices and return results faster are less accurate.</li>
+        </ul>
+
+    </section>
+
+    <!-- Future & Conclusion -->
+    <section id="future" class="content-section">
+        <h3>Future Efforts & Conclusion</h3>
+        <p><strong>Where research is heading:</strong> lighter snapshot HSI for field use, spectral-spatial transformers, self-supervised learning, and on-device models integrated with IoT/digital twins for farm-to-shelf traceability.</p>
+        <ul class="bullets" role="list">
+            <li><strong>Models that handle messy reality.</strong> Spectral–spatial deep nets, stronger transfer learning, and domain adaptation across variables.</li>
+            <li><strong>Edge-first deployments.</strong> Quantized/lightweight detectors and instance segmentation on kiosks, packhouse PCs, and smart cameras with robust calibration/update playbooks.</li>
+            <li><strong>From bins to forecasts.</strong> Move beyond stage labels to predicting <em>days-to-ripe</em> for logistics and dynamic pricing.</li>
+            <li><strong>Robotics + vision in the canopy.</strong> Field robots/drones for pick/no-pick, thinning, and yield mapping, pushing sensing earlier in the season.</li>
+        </ul>
+        <p></p>
+        <h3>Who’s pushing the frontier</h3>
+        <ul class="bullets" role="list">
+            <li><strong>UC Davis Postharvest Research &amp; Extension Center.</strong> Best practices for ripening/ethylene management, calibration, and QA that underpin robust deployments.</li>
+            <li><strong>USDA Agricultural Research Service (ARS).</strong> Research into techniques for maturity and internal quality (e.g., SSC), including VIS–NIR HSI for storage and shipping readiness.</li>
+            <li><strong>Wageningen University &amp; Research.</strong> Non-destructive sensing via computer vision and ML.</li>
+            <li><strong>Carnegie Mellon University (CMU) Robotics Institute.</strong> Agricultural perception/manipulation (Kantor Lab), canopy sensing, and on-farm sensor fusion that complements vision.</li>
+        </ul>
+        <p></p>
+        <div class="grid-2 video-embed">
+            <iframe title="Non-destructive fruit quality overview" loading="lazy" width="560" height="315"
+                    src="https://www.youtube.com/embed/uekIq0SoIpY" allowfullscreen></iframe>
+            <iframe title="HSI ripeness seminar" loading="lazy" width="560" height="315"
+                    src="https://www.youtube.com/embed/G-CHevBpfBQ" allowfullscreen></iframe>
+        </div>
+    </section>
+
+
+    <!-- Quiz -->
+    <section id="quiz" class="content-section">
+        <h3>Quick Check: 6-Question Quiz</h3>
+        <form id="quizForm">
+            <ol>
+                <li>
+                    <p>"Freshness" includes the evaluation and classification of: </p>
+                    <label><input type="radio" name="q1" value="a" /> Auditory information</label>
+                    <label><input type="radio" name="q1" value="b" /> Visible cues </label>
+                    <label><input type="radio" name="q1" value="c" /> Weather reports</label>
+                </li>
+                <li>
+                    <p>Which of the following is a commonly used sensor technique?</p>
+                    <label><input type="radio" name="q2" value="a" /> Smell </label>
+                    <label><input type="radio" name="q2" value="b" /> Images and video </label>
+                    <label><input type="radio" name="q2" value="c" /> Vibes </label>
+                </li>
+                <li>
+                    <p>One pro of the YOLO algorithm is:</p>
+                    <label><input type="radio" name="q3" value="a" /> Gathering precise data, like "what percentage of this fruit is moldy?"</label>
+                    <label><input type="radio" name="q3" value="b" /> It's fast, simple to run directly on devices, and is robust after training.</label>
+                    <label><input type="radio" name="q3" value="c" /> It's accurate 100% of the time. </label>
+                </li>
+                <li>
+                    <p>An example of where Color/Texture Classification and Basic ML succeeds is:</p>
+                    <label><input type="radio" name="q4" value="a" /> Produce that has been dropped on the floor of the grocery store.</label>
+                    <label><input type="radio" name="q4" value="b" /> Produce with clear, monotonic color changes.</label>
+                    <label><input type="radio" name="q4" value="c" /> Produce that changes color from green to slightly more green.</label>
+                </li>
+                <li>
+                    <p>Which item is a challenge in this problem space:</p>
+                    <label><input type="radio" name="q5" value="a" /> Growing fruit that is both delicious and easy to peel.</label>
+                    <label><input type="radio" name="q5" value="b" /> Human motion vs app latency: shaky phones and moving fruit results in motion blur. </label>
+                    <label><input type="radio" name="q5" value="c" /> Trying to grow bananas in snowy climates.</label>
+                </li>
+                <li>
+                    <p>Which of the following is a direction on future research:</p>
+                    <label><input type="radio" name="q6" value="a" /> Spherical bananas that make classification easier.</label>
+                    <label><input type="radio" name="q6" value="b" /> Models that handle messy reality. </label>
+                    <label><input type="radio" name="q6" value="c" /> Using a rat's brain to run classification models.</label>
+                </li>
+            </ol>
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <div id="quizScore" class="status"></div>
+        </form>
+    </section>
+
+    <!-- Annotated bibliography -->
+    <section id="references" class="content-section">
+        <h2>References</h2>
+        <ol>
+            <li id="ref-1">
+                <strong>Fruit Ripening and Ethylene Management (with 7 color ripeness charts)</strong>,
+                Mary Lu Arpaia, Beth Mitcham, Marita Cantwell, Carlos Crisosto, Adel Kader, Mike Reid, Jim Thompson, 2008,
+                UC Davis Postharvest Research &amp; Extension Center.
+                <a href="https://postharvest.ucdavis.edu/publication/fruit-ripening-and-ethylene-management-7-color-ripeness-charts">Source</a><br/>
+                <em>Synopsis:</em> Extension guide detailing visual maturity indices (e.g., color charts), ethylene management, and practical ripening control used widely by industry.<br/>
+                <em>Reliability:</em> <strong>High</strong> — Authoritative university extension material from a leading postharvest center. (Foundational, though older.)
+            </li>
+
+            <li id="ref-2">
+                <strong>Chemical Sensors for Farm-to-Table Monitoring of Fruit Quality</strong>, Denise Wilson, <em>Sensors</em> 21(5):1634, 2021 (MDPI).
+                <a href="https://doi.org/10.3390/s21051634">DOI</a> | <a href="https://www.mdpi.com/1424-8220/21/5/1634">Source</a><br/>
+                <em>Synopsis:</em> Peer-reviewed review of chemical sensing for °Brix/sugars, pH, and ethylene; discusses practical instruments, costs, and trade-offs across the supply chain.<br/>
+                <em>Reliability:</em> <strong>High</strong> — Peer-reviewed; comprehensive review; open access.
+            </li>
+
+            <li id="ref-3">
+                <strong>Modelling, responses and applications of time–temperature indicators for intelligent food packaging: a comprehensive review</strong>, 2019,
+                <em>Trends in Food Science &amp; Technology</em>.
+                <a href="https://www.sciencedirect.com/science/article/pii/S0924224419307460">Source</a><br/>
+                <em>Synopsis:</em> Surveys principles and real-world use of time–temperature indicator (TTI) labels that visualize cumulative temperature exposure in perishables.<br/>
+                <em>Reliability:</em> <strong>High</strong> — Established Elsevier review journal; widely cited.
+            </li>
+
+            <li id="ref-4">
+                <strong>Innovative Hyperspectral Imaging-Based Techniques for Quality Evaluation of Fruits and Vegetables: A Review</strong>,
+                Yuzhen Lu, Yuping Huang, Renfu Lu, <em>Applied Sciences</em> 7(2):189, 2017 (MDPI).
+                <a href="https://doi.org/10.3390/app7020189">DOI</a> | <a href="https://www.mdpi.com/2076-3417/7/2/189">Source</a><br/>
+                <em>Synopsis:</em> Explains why hyperspectral imaging (VIS–NIR) is a fast, non-destructive option that bridges imaging and spectroscopy; covers hardware modes and quality attributes (SSC, firmness, defects).<br/>
+                <em>Reliability:</em> <strong>High</strong> — Peer-reviewed; authors include USDA-ARS researcher; heavily cited in food-quality HSI literature.
+            </li>
+
+            <li id="ref-5">
+                <strong>Non-destructive assessment of apple internal quality using rotational hyperspectral imaging</strong>,
+                Xiaojiang Wang, Junying Han, Chengzhong Liu, Tong Feng, 2024, <em>Frontiers in Plant Science</em> 15:1432120.
+                <a href="https://doi.org/10.3389/fpls.2024.1432120">DOI</a> | <a href="https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2024.1432120/full">Source</a><br/>
+                <em>Synopsis:</em> Demonstrates non-destructive prediction of vitamin C, titratable acidity, soluble solids, and starch from VIS–NIR HSI, highlighting modern optical routes to internal chemistry.<br/>
+                <em>Reliability:</em> <strong>High</strong> — Peer-reviewed open-access journal; recent, methodologically detailed.
+            </li>
+
+            <li id="ref-6">
+                <strong>Computer Vision Meets Generative Models in Agriculture: Technological Advances, Challenges and Opportunities</strong>,
+                Shuming Xiong, Xiao Chen, 2025, <em>Applied Sciences</em> 15(14):7663 (MDPI).
+                <a href="https://doi.org/10.3390/app15147663">DOI</a> | <a href="https://www.mdpi.com/2076-3417/15/14/7663">Source</a><br/>
+                <em>Synopsis:</em> Broad review of CV/DL in agriculture (e.g., CNNs, YOLO, transformers), noting environmental variability, edge-deployment constraints, and data-scarcity; includes quality-control/freshness examples and mobile/edge trends.<br/>
+                <em>Reliability:</em> <strong>High</strong> — Recent, peer-reviewed survey consolidating hundreds of references; open access.
+            </li>
+
+            <li id="ref-7">
+                <strong>A Robust Illumination-Invariant Camera System for Agricultural Applications</strong>,
+                Abhisesh Silwal, Tanvir Parhar, Francisco Yandun, George Kantor, 2021, arXiv preprint.
+                <a href="https://arxiv.org/abs/2101.02190">Source</a><br/>
+                <em>Synopsis:</em> Presents an active-lighting camera system that stabilizes images under extreme outdoor illumination, reducing data needs and improving fruit detection—evidence of real-world lighting/occlusion challenges and mitigations.<br/>
+                <em>Reliability:</em> <strong>Moderate</strong> — Preprint (not peer-reviewed) but by recognized agricultural robotics researchers; supports the stated outdoor-vision challenges.
+            </li>
+        </ol>
+    </section>
+</main>
+
+<footer class="site-footer">
+    <p>© <span id="year"></span> Produce Freshness Estimation Tutorial. Built for GitHub Pages.</p>
+</footer>
+</body>
+</html>
