@@ -44,7 +44,19 @@
     <!-- Introduction -->
     <section id="intro" class="content-section">
         <h3>Introduction & Problem Definition</h3>
-        <p>Determining <strong>“freshness”</strong> blends the evaluation and classification visible cues (color, texture, bruising), internal chemistry (sugars, acids, volatiles), and physical exposure (time and temperature). Evaluation of these attributes typically involves using sensors, either visual, chemical, or physical, to measure these characteristics. Some techniques involve sampling the flesh or juice, measuring pH using electrodes, or checking physical labels attached to the fruits which measure exposure to humidity and temperature. However, most research is focused on non-destructive techniques which analyze light emitted by the produce, which can determine freshness without destroying, altering, or even touching the fruit at all. Many of the biggest challenges in this space involve overcoming various outdoor and external conditions, such as snow, rain, dust, or other visual occlusions. Computer vision is often used in conjunction with deep learning techniques such as neural networks to be able to detect and measure freshness-relevant attributes such as color, texture, shape, and size to make a final determination on whether a produce item is ready to be picked, ready to eat, or is not suitable for consumption. These visual cues are then translated into supervised targets like <em>unripe</em>, <em>ripe</em>, and <em>overripe/spoiled</em> using labeled images and videos. Computer vision techniques are most commonly used in industry because they're fast, scalable, non-destructive, and cost-effective.</p>
+        <p>    Determining “freshness” blends the evaluation and classification of visible cues (color, texture, bruising),
+            internal chemistry (sugars, acids, volatiles), and physical exposure (time and temperature)
+            [<a href="#ref-1">1</a>]. Evaluation of these attributes typically involves using sensors—visual, chemical, or
+            physical—to measure these characteristics; some techniques involve sampling flesh or juice, measuring pH with
+            electrodes, or using indicators/labels that reflect temperature history
+            [<a href="#ref-1">1</a>]. However, much current research focuses on <em>non-destructive</em> optical methods that
+            analyze reflected/transmitted light (e.g., VIS–NIR and hyperspectral imaging) to infer internal quality without
+            damaging or even touching the fruit [<a href="#ref-2">2</a>]. Many of the biggest challenges involve outdoor and
+            operational factors (lighting changes, occlusions, season/cultivar shifts) that degrade image quality and model
+            generalization; modern computer vision with deep learning addresses these issues and maps visual cues (color,
+            texture, shape, size) to supervised targets such as unripe/ripe/overripe using labeled images and videos
+            [<a href="#ref-3">3</a>]. These vision approaches are attractive in production because they are fast, scalable,
+            non-destructive, and increasingly cost-effective at the edge [<a href="#ref-2">2</a>, <a href="#ref-3">3</a>].</p>
         <!-- Bananas: Ripeness Examples with Demo Legends -->
         <style>
           .banana-grid {
@@ -150,16 +162,6 @@
                 </figcaption>
             </figure>
         </div>
-<!--        <div class="grid-2">-->
-<!--            <figure>-->
-<!--                <img loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Spectral_sampling_RGB_multispectral_hyperspectral_imaging.svg" alt="RGB vs multispectral vs hyperspectral sampling diagram." />-->
-<!--                <figcaption>RGB vs multispectral vs hyperspectral. Source: <a href="https://commons.wikimedia.org/wiki/File:Spectral_sampling_RGB_multispectral_hyperspectral_imaging.svg" target="_blank" rel="noopener">Wikimedia Commons (Lucasbosch, CC BY-SA)</a></figcaption>-->
-<!--            </figure>-->
-<!--            <figure>-->
-<!--                <img loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/1/1a/Hyperspectral_Imaging_Techniques.jpg" alt="Hyperspectral imaging techniques illustration." />-->
-<!--                <figcaption>Hyperspectral imaging techniques. Source: <a href="https://en.wikipedia.org/wiki/File:Hyperspectral_Imaging_Techniques.jpg" target="_blank" rel="noopener">Wikimedia Commons</a></figcaption>-->
-<!--            </figure>-->
-<!--        </div>-->
     </section>
 
     <!-- Sensors -->
@@ -168,7 +170,10 @@
         <p>There are a number of existing techniques used in industry for detecting spoilage.
 
         <h4>Images and Video</h4>
-        <p>Most field and retail setups use standard RGB cameras on small, battery-powered devices (e.g. phones, Go Pros, etc). Hardware is affordable, easy to deploy, and reliable. However, this technique typically requires more strongly ideal conditions than others. For example, some setups rely on sunlight to reflect off of the produce.</p>
+        <p>    Most field and retail setups use standard RGB cameras on small, battery-powered devices (e.g., phones, action cameras).
+            Hardware is affordable, easy to deploy, and reliable. However, this technique typically requires more strongly ideal
+            conditions than others; for example, some setups rely on sunlight to reflect off of the produce
+            [<a href="#ref-4">4</a>].</p>
         <ul class="bullets">
             <li><strong>Components:</strong> camera, lighting, neutral background, compute (device or cloud).</li>
             <li><strong>Use conditions:</strong> diffuse light, fixed distance, minimal motion blur; white-balance and exposure locked (to have more consistent coloring.)</li>
@@ -219,8 +224,8 @@
         </div>
 
         <h4>Multispectral and Hyperspectral</h4>
-        <p>Hyperspectral imaging uses both spectroscopy (in other words, the visible spectrum) and basic imaging techniques to determine ripeness by constructing a chemical map of the fruit. Hyperspectral imaging can capture up to hundreds of narrow bands and correlate this information to the internal chemistry of the produce using AI models. This is often used for quality control and is becoming increasingly real-time when using snapshot sensors.</p>
-
+        <p><strong>Hyperspectral imaging</strong> uses both spectroscopy and imaging to build a per-pixel “chemical map” of fruit; modern systems capture dozens–hundreds of narrow bands and correlate spectra to internal chemistry, and snapshot cameras are enabling more real-time quality control
+        [<a href="#ref-5">5</a>].</p>
         <ul class="bullets">
             <li><strong>Components:</strong> HSI camera (push-broom or snapshot), lens, uniform lighting, calibration targets (white/dark), conveyance for line-scan systems.</li>
             <li><strong>Use conditions:</strong> stable illumination, controlled motion for push-broom, periodic white/dark reference captures.</li>
@@ -296,7 +301,7 @@
         </figure>
 
         <h4>Fluorescence Spectroscopy</h4>
-        <p>Fluorescence spectroscopy is a technique which uses fluorescent light emitted by fluorophores, which can be used to measure microbial growth and oxidation within the produce. </p>
+        <p>Fluorescence spectroscopy is a technique which uses fluorescent light emitted by fluorophores, which can be used to measure microbial growth and oxidation within the produce.[<a href="#ref-6">6</a>]</p>
         <ul class="bullets" role="list">
             <li>
                 <strong>Components:</strong>
@@ -330,7 +335,7 @@
     <!-- Algorithms -->
     <section id="algorithms" class="content-section">
         <h3>Algorithms Involved in Detecting Freshness</h3>
-        <p><strong>Color/texture Classification and Basic ML</strong>: This algorithm involves converting images to color spaces that are perceived by human perception, computing simple stats from these spaces like means and histograms, and adding texture descriptors. A lightweight classifier then maps features to ripeness tiers. This is especially effective under ideal conditions, such as fixed and consistent lighting, neutral backgrounds and with produce that has consistent and predictable color progression.</p>
+        <p><strong>Color/texture Classification and Basic ML</strong>: This algorithm involves converting images to color spaces that are perceived by human perception, computing simple stats from these spaces like means and histograms, and adding texture descriptors. A lightweight classifier then maps features to ripeness tiers. This is especially effective under ideal conditions, such as fixed and consistent lighting, neutral backgrounds and with produce that has consistent and predictable color progression.[<a href="#ref-7">7</a>]</p>
         <p><strong>Pros:</strong>
         <ul class="bullets">
             <li>Models are simple and can easily run on small devices.</li>
@@ -341,8 +346,53 @@
             <li>Requires ideal conditions, such as good illumination and consistent color balance.</li>
             <li>Not good at detecting subtle defects or internals of the fruit.</li>
         </ul>
+        <p></p>
+        <details>
+            <summary style="cursor:pointer;font-weight:600"><strong>Click to see algorithm</strong></summary>
+            <pre><code>
+                // Capture & setup (controlled environment)
+                lock_camera_settings(exposure, white_balance, ISO)
+                img = capture_frame()                      // RGB image under diffuse, high-CRI LEDs
 
-        <p><strong>Deep Convolutional Neural Network RGB Classifiers</strong>: A neural network is trained on labeled images of produce at known ripeness levels. This technique can leverage transfer learning and imaging enhancements which allows models to better handle environmental variables, such as perspective or background changes than hand-crafted features.</p>
+                // Preprocess
+                img = gray_world_white_balance(img)        // simple color constancy
+                mask = segment_foreground(img)             // e.g., Otsu on Lab a*, clean with morphology
+                mask = remove_glare(mask, img)             // suppress V&gt;0.95 &amp; S&lt;0.15 pixels in HSV
+
+                // Feature extraction (masked)
+                hsv  = to_HSV(img); lab = to_Lab(img); gray = to_gray(img)
+                H_hist = histogram(hsv.H[mask], bins=16)   // hue histogram (wrap-around)
+                S_hist = histogram(hsv.S[mask], bins=8)
+                V_hist = histogram(hsv.V[mask], bins=8)
+                Lab_stats = [mean(lab.L[mask]), std(lab.L[mask]),
+                             mean(lab.a[mask]), std(lab.a[mask]),
+                             mean(lab.b[mask]), std(lab.b[mask])]
+                LBP_hist = lbp_uniform_hist(gray[mask], P=8, R=1)
+                GLCM = glcm(gray[mask], dist=1, angle=0)   // co-occurrence matrix
+                GLCM_feats = [contrast(GLCM), homogeneity(GLCM), energy(GLCM), correlation(GLCM)]
+                dark_ratio = pct(gray[mask] &lt; percentile(gray[mask], 15))
+                shape_feats = [area(mask), compactness(mask)]
+
+                // Assemble feature vector
+                x = concat(H_hist, S_hist, V_hist, Lab_stats, LBP_hist, GLCM_feats, dark_ratio, shape_feats)
+
+                // Train (offline)
+                X_train, y_train = load_dataset_features(...)
+                clf = StandardScaler() + LogisticRegression()   // or LinearSVM / RandomForest
+                clf.fit(X_train, y_train)                       // keep a validation set for tuning/calibration
+
+                // Inference (online)
+                y_hat = clf.predict(x)
+                p_hat = clf.predict_proba(x)                    // use calibrated probabilities if available
+                return {class: y_hat, confidence: max(p_hat)}
+
+                // Maintenance
+                // - Periodic re-check of calibration (gray card), thresholds, and small re-trains per season/site.
+                // - Monitor drift via validation images; update model or normalization if accuracy drops.
+          </code></pre>
+        </details>
+
+        <p><strong>Deep Convolutional Neural Network RGB Classifiers</strong>: A neural network is trained on labeled images of produce at known ripeness levels. This technique can leverage transfer learning and imaging enhancements which allows models to better handle environmental variables, such as perspective or background changes than hand-crafted features.[<a href="#ref-8">8</a>]</p>
         <p><strong>Pros:</strong>
         <ul class="bullets">
             <li>Better handling of conplex scenes and situations.</li>
@@ -353,8 +403,57 @@
             <li>Requires strong training data and validation.</li>
             <li>Similar to the previous technique, does not go beyond surface-level detail.</li>
         </ul>
+        <p></p>
+        <details>
+            <summary style="cursor:pointer;font-weight:600"><strong>Click to see algorithm</strong></summary>
+            <pre><code>
+                // Dataset (images + labels)
+                data = load_images_with_labels(root_dir)              // e.g., classes: unripe, ripe, overripe
+                split = stratified_train_val_test_split(data, 80/10/10)
 
-        <p><strong>Object detection and segmentation for defects with YOLO and Mask R-CNN</strong>: YOLO (You Only Look Once) works to identify bad spots, while Mask R-CNN (Mask Region-based Convolutional Neural Networks) works to color in damaged pixels when the image is processed. YOLO is good when trying to run detection quickly - eg reject if any produce has a bruise larger than X. This is often used during fruit processing when speed matters. Mask R-CNN is good when precision is required, for example if you want to reject if greater than N% of the surface of a piece of produce has mold or is discolored. Also good for reporting general quaility.</p>
+                // Augmentation (improve robustness to real scenes)
+                aug = Compose([
+                  RandomResizedCrop(224), HorizontalFlip(p=0.5),
+                  ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.02),
+                  GaussianBlur(p=0.2), Normalize(mean,std)
+                ])
+
+                // Model (transfer learning)
+                backbone = load_pretrained("efficientnet_b0")         // or mobilenet_v3, resnet50, etc.
+                freeze(backbone.features, until="last_stage")         // warmup: freeze most layers
+                head = Sequential([GlobalPool(), Dropout(0.2), Dense(num_classes)])  // small linear head
+                model = Model(backbone.features, head)
+
+                // Training
+                for epoch in 1..E:
+                  for (x,y) in loader(train, aug):
+                    y_hat = model(x)
+                    loss = cross_entropy(y_hat, y)
+                    loss.backward(); optimizer.step(); optimizer.zero_grad()
+                  validate_on(val)                                    // track balanced accuracy, F1
+                  unfreeze_progressively(backbone)                    // optional fine-tuning
+
+                // Calibration (optional but recommended)
+                cal_model = temperature_scale(model, val)             // or isotonic on logits
+
+                // Export for edge
+                edge_model = quantize_int8(cal_model, rep_data=small_calib_set)
+                save(edge_model, "ripeness_rgb_classifier.tflite")    // or ONNX/CoreML/TensorRT
+
+                // Inference (device)
+                x = preprocess(capture_frame(), target=224)
+                p = softmax(edge_model(x))
+                pred = argmax(p)
+                if max(p) &lt; 0.6: fallback = "ask for better lighting" // simple quality gate
+                return {class: pred, confidence: max(p)}
+
+                // Maintenance & drift handling
+                // - Periodically collect hard cases, re-label small batches, fine-tune few epochs.
+                // - Track per-site metrics; keep configs (exposure/WB) versioned for each camera.
+            </code></pre>
+        </details>
+
+        <p><strong>Object detection and segmentation for defects with YOLO and Mask R-CNN</strong>: YOLO (You Only Look Once) works to identify bad spots, while Mask R-CNN (Mask Region-based Convolutional Neural Networks) works to color in damaged pixels when the image is processed. YOLO is good when trying to run detection quickly - eg reject if any produce has a bruise larger than X. This is often used during fruit processing when speed matters. Mask R-CNN is good when precision is required, for example if you want to reject if greater than N% of the surface of a piece of produce has mold or is discolored. Also good for reporting general quality.[<a href="#ref-9">9</a>]</p>
         <p><strong>Pros of YOLO:</strong>
         <ul class="bullets">
             <li>It's fast, simple to run directly on devices, and is robust after training.</li>
@@ -502,7 +601,7 @@
     <!-- Challenges -->
     <section id="challenges" class="content-section">
         <h3>Challenges</h3>
-        <p>There are a number of major challenges in this space. These include:</p>
+        <p>There are a number of major challenges in this space.[<a href="#ref-10">2</a>,<a href="#ref-10">4</a>] These include:</p>
         <ul class="bullets">
             <li><strong>Human motion vs app latency:</strong> shaky phones and moving fruit results in motion blur. This can be solved with shorter exposure, stabilization, or burst frames.</li>
             <li><strong>Lighting drift and color consistency:</strong> Automated exposure hardware and software results in inconsistent color features. Locking camera settings can help.</li>
@@ -594,59 +693,81 @@
         <h2>References</h2>
         <ol>
             <li id="ref-1">
-                <strong>Fruit Ripening and Ethylene Management (with 7 color ripeness charts)</strong>,
-                Mary Lu Arpaia, Beth Mitcham, Marita Cantwell, Carlos Crisosto, Adel Kader, Mike Reid, Jim Thompson, 2008,
+                <strong>[1] “Fruit Ripening and Ethylene Management (with 7 color ripeness charts).”</strong>
+                Mary Lu Arpaia, Beth Mitcham, Marita Cantwell, Carlos Crisosto, Adel Kader, Mike Reid, Jim Thompson (2008).
                 UC Davis Postharvest Research &amp; Extension Center.
                 <a href="https://postharvest.ucdavis.edu/publication/fruit-ripening-and-ethylene-management-7-color-ripeness-charts">Source</a><br/>
-                <em>Synopsis:</em> Extension guide detailing visual maturity indices (e.g., color charts), ethylene management, and practical ripening control used widely by industry.<br/>
-                <em>Reliability:</em> <strong>High</strong> — Authoritative university extension material from a leading postharvest center. (Foundational, though older.)
+                <em>Synopsis:</em> Authoritative extension resource on ripening biology and practice: visual maturity indices (e.g., color charts),
+                links to internal chemistry (sugars/acids/volatiles), temperature and ethylene effects, and practical measurement guidance.<br/>
+                <em>Reliability:</em> <strong>High</strong> — UC Davis Postharvest is a leading academic/industry authority with long-standing, citable guidance.
             </li>
 
             <li id="ref-2">
-                <strong>Chemical Sensors for Farm-to-Table Monitoring of Fruit Quality</strong>, Denise Wilson, <em>Sensors</em> 21(5):1634, 2021 (MDPI).
-                <a href="https://doi.org/10.3390/s21051634">DOI</a> | <a href="https://www.mdpi.com/1424-8220/21/5/1634">Source</a><br/>
-                <em>Synopsis:</em> Peer-reviewed review of chemical sensing for °Brix/sugars, pH, and ethylene; discusses practical instruments, costs, and trade-offs across the supply chain.<br/>
-                <em>Reliability:</em> <strong>High</strong> — Peer-reviewed; comprehensive review; open access.
+                <strong>[2] “Innovative Hyperspectral Imaging-Based Techniques for Quality Evaluation of Fruits and Vegetables: A Review.”</strong>
+                Yuzhen Lu, Yuping Huang, Renfu Lu (2017). <em>Applied Sciences</em> 7(2):189 (MDPI).
+                <a href="https://doi.org/10.3390/app7020189">DOI</a> |
+                <a href="https://www.mdpi.com/2076-3417/7/2/189">Source</a><br/>
+                <em>Synopsis:</em> Peer-reviewed review explaining why VIS–NIR hyperspectral imaging is a fast, non-destructive approach that bridges imaging and spectroscopy to estimate internal attributes (e.g., SSC/firmness) and external defects; covers sensing modes and system design.<br/>
+                <em>Reliability:</em> <strong>High</strong> — Widely cited review authored by USDA-ARS/MSU researchers; rigorous and method-focused.
             </li>
 
             <li id="ref-3">
-                <strong>Modelling, responses and applications of time–temperature indicators for intelligent food packaging: a comprehensive review</strong>, 2019,
-                <em>Trends in Food Science &amp; Technology</em>.
-                <a href="https://www.sciencedirect.com/science/article/pii/S0924224419307460">Source</a><br/>
-                <em>Synopsis:</em> Surveys principles and real-world use of time–temperature indicator (TTI) labels that visualize cumulative temperature exposure in perishables.<br/>
-                <em>Reliability:</em> <strong>High</strong> — Established Elsevier review journal; widely cited.
+                <strong>[3] “Application of Machine Vision System in Food Detection.”</strong>
+                Zhifei Xiao, Jilai Wang, Lu Han, Shubiao Guo, Qinghao Cui (2022). <em>Frontiers in Nutrition</em> 9:888245.
+                <a href="https://www.frontiersin.org/articles/10.3389/fnut.2022.888245/full">Source</a><br/>
+                <em>Synopsis:</em> Peer-reviewed survey of computer vision for food quality/safety, detailing hardware, deep learning pipelines (CNNs),
+                non-destructive inspection benefits, and practical challenges such as lighting, noise, motion, and environmental variability.<br/>
+                <em>Reliability:</em> <strong>High</strong> — Reputable open-access journal with transparent peer review; comprehensive citations and figures.
             </li>
-
             <li id="ref-4">
-                <strong>Innovative Hyperspectral Imaging-Based Techniques for Quality Evaluation of Fruits and Vegetables: A Review</strong>,
-                Yuzhen Lu, Yuping Huang, Renfu Lu, <em>Applied Sciences</em> 7(2):189, 2017 (MDPI).
-                <a href="https://doi.org/10.3390/app7020189">DOI</a> | <a href="https://www.mdpi.com/2076-3417/7/2/189">Source</a><br/>
-                <em>Synopsis:</em> Explains why hyperspectral imaging (VIS–NIR) is a fast, non-destructive option that bridges imaging and spectroscopy; covers hardware modes and quality attributes (SSC, firmness, defects).<br/>
-                <em>Reliability:</em> <strong>High</strong> — Peer-reviewed; authors include USDA-ARS researcher; heavily cited in food-quality HSI literature.
+                <strong>[4] “Artificial Vision Systems for Fruit Inspection and Classification: Systematic Literature Review.”</strong>
+                Ignacio Rojas Santelices, Sandra Cano, Fernando Moreira, Álvaro Peña Fritz, <em>Sensors</em> 25(5):1524, 2025.
+                <a href="https://doi.org/10.3390/s25051524">DOI</a> ·
+                <a href="https://www.mdpi.com/1424-8220/25/5/1524">Source</a><br/>
+                <em>Synopsis:</em> A PRISMA-guided systematic review of fruit inspection/classification systems that reports
+                (i) RGB cameras are the predominant sensor for fruit vision (≈84% of applications),
+                (ii) smartphone-based acquisition is increasingly used at retail/points of consumption, and
+                (iii) many studies capture under ambient light (e.g., sunlight) in orchards and retail, whereas processing lines prefer controlled LEDs—directly supporting common field/retail practices and their lighting dependencies.<br/>
+                <em>Reliability:</em> <strong>High</strong> — Peer-reviewed journal (MDPI <em>Sensors</em>), open access, systematic methodology with hardware/lighting breakdowns relevant to practical deployments.
             </li>
-
             <li id="ref-5">
-                <strong>Non-destructive assessment of apple internal quality using rotational hyperspectral imaging</strong>,
-                Xiaojiang Wang, Junying Han, Chengzhong Liu, Tong Feng, 2024, <em>Frontiers in Plant Science</em> 15:1432120.
-                <a href="https://doi.org/10.3389/fpls.2024.1432120">DOI</a> | <a href="https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2024.1432120/full">Source</a><br/>
-                <em>Synopsis:</em> Demonstrates non-destructive prediction of vitamin C, titratable acidity, soluble solids, and starch from VIS–NIR HSI, highlighting modern optical routes to internal chemistry.<br/>
-                <em>Reliability:</em> <strong>High</strong> — Peer-reviewed open-access journal; recent, methodologically detailed.
+                <strong>[5] “Innovative Hyperspectral Imaging-Based Techniques for Quality Evaluation of Fruits and Vegetables: A Review.”</strong>
+                Yuzhen Lu, Yuping Huang, Renfu Lu. <em>Applied Sciences</em> 7(2):189, 2017. MDPI.
+                <a href="https://doi.org/10.3390/app7020189">DOI</a> · <a href="https://www.mdpi.com/2076-3417/7/2/189">Source</a><br/>
+                <em>Synopsis:</em> Explains hyperspectral imaging (integration of imaging + spectroscopy), common configurations (including snapshot/area), and non-destructive estimation of internal attributes (e.g., soluble solids/firmness) for QC.<br/>
+                <em>Reliability:</em> <strong>High</strong> — Peer-reviewed review widely cited in food/produce sensing; authors include a USDA-ARS researcher.
             </li>
 
             <li id="ref-6">
-                <strong>Computer Vision Meets Generative Models in Agriculture: Technological Advances, Challenges and Opportunities</strong>,
-                Shuming Xiong, Xiao Chen, 2025, <em>Applied Sciences</em> 15(14):7663 (MDPI).
-                <a href="https://doi.org/10.3390/app15147663">DOI</a> | <a href="https://www.mdpi.com/2076-3417/15/14/7663">Source</a><br/>
-                <em>Synopsis:</em> Broad review of CV/DL in agriculture (e.g., CNNs, YOLO, transformers), noting environmental variability, edge-deployment constraints, and data-scarcity; includes quality-control/freshness examples and mobile/edge trends.<br/>
-                <em>Reliability:</em> <strong>High</strong> — Recent, peer-reviewed survey consolidating hundreds of references; open access.
+                <strong>[6] “Evolving trends in fluorescence spectroscopy techniques for food analysis: a review.”</strong>
+                (Multiple authors). <em>Trends in Food Science &amp; Technology</em>, 2024. Elsevier.
+                <a href="https://www.sciencedirect.com/science/article/pii/S0889157524002461">Source</a><br/>
+                <em>Synopsis:</em> Surveys fluorescence spectroscopy across meats/fish/oils and microorganisms, highlighting how emitted fluorescence tracks microbial growth and oxidation markers for rapid, non-destructive quality control.<br/>
+                <em>Reliability:</em> <strong>High</strong> — Recent peer-reviewed review in a top food-science journal.
             </li>
 
             <li id="ref-7">
-                <strong>A Robust Illumination-Invariant Camera System for Agricultural Applications</strong>,
-                Abhisesh Silwal, Tanvir Parhar, Francisco Yandun, George Kantor, 2021, arXiv preprint.
-                <a href="https://arxiv.org/abs/2101.02190">Source</a><br/>
-                <em>Synopsis:</em> Presents an active-lighting camera system that stabilizes images under extreme outdoor illumination, reducing data needs and improving fruit detection—evidence of real-world lighting/occlusion challenges and mitigations.<br/>
-                <em>Reliability:</em> <strong>Moderate</strong> — Preprint (not peer-reviewed) but by recognized agricultural robotics researchers; supports the stated outdoor-vision challenges.
+                <strong>[7] “Colour measurements by computer vision for food quality control – A review.”</strong>
+                C. León et&nbsp;al. <em>Trends in Food Science &amp; Technology</em> 28(10): 2012. Elsevier.
+                <a href="https://www.sciencedirect.com/science/article/pii/S0924224412001835">Source</a><br/>
+                <em>Synopsis:</em> Reviews computer-vision color measurement, emphasizing perceptual color spaces (e.g., CIE Lab, HSV), histogram/moment features, texture descriptors, and the importance of controlled illumination and backgrounds.<br/>
+                <em>Reliability:</em> <strong>High</strong> — Established review with methodological guidance on features and lighting control.
+            </li>
+
+            <li id="ref-8">
+                <strong>[8] “Deep learning in agriculture: A survey.”</strong>
+                Andreas Kamilaris, Francesc X. Prenafeta-Boldú, 2018. arXiv (preprint of survey).
+                <a href="https://arxiv.org/abs/1807.11809">Source</a><br/>
+                <em>Synopsis:</em> Synthesizes dozens of agricultural CV studies; documents the effectiveness of CNNs, transfer learning, and data augmentation for robust performance versus classical hand-crafted features under real-world variability.<br/>
+                <em>Reliability:</em> <strong>High</strong> — Influential survey (also published version available via journal); transparent citations and comparisons.
+            </li>
+
+            <li id="ref-9">
+                <strong>[9] “A review of external quality inspection for fruit grading using CNN.”</strong>
+                (Multiple authors). <em>Engineering Applications of Artificial Intelligence</em>, 2024. Elsevier.
+                <a href="https://www.sciencedirect.com/science/article/pii/S2589721724000369">Source</a><br/>
+                <em>Synopsis:</em> Reviews CNN-based external quality control, covering object detection (e.g., YOLO) for fast inline decisions and instance/semantic segmentation (e.g., Mask R-CNN) for precise defect area quantification and grading rules.<br/>
+                <em>Reliability:</em> <strong>High</strong> — Recent peer-reviewed review focused on fruit grading; summarizes models, metrics, and deployment contexts.
             </li>
         </ol>
     </section>
